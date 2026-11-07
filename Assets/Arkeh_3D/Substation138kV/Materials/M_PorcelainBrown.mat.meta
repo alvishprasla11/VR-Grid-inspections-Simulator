@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c795a548447e553458c41b084443b977
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 419036
+  packageName: Substation 138 kV Kit
+  packageVersion: 1.0
+  assetPath: Assets/Arkeh_3D/Substation138kV/Materials/M_PorcelainBrown.mat
+  uploadId: 1024522

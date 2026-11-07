@@ -1,0 +1,20 @@
+{
+    "name": "Arkeh3D.Substation138kV.Runtime",
+    "rootNamespace": "Arkeh3D.Substation138kV",
+    "references": ["Unity.InputSystem"],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.inputsystem",
+            "expression": "1.0.0",
+            "define": "KIT_INPUT_SYSTEM"
+        }
+    ],
+    "noEngineReferences": false
+}

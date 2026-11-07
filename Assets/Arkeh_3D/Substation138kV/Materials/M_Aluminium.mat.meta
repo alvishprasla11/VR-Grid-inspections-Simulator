@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: db6f114753c5e994aab0a8aa46bd2926
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 419036
+  packageName: Substation 138 kV Kit
+  packageVersion: 1.0
+  assetPath: Assets/Arkeh_3D/Substation138kV/Materials/M_Aluminium.mat
+  uploadId: 1024522

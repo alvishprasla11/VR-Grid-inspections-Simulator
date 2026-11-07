@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 84cf9b100d984bd49b947df4c78706fa
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 419036
+  packageName: Substation 138 kV Kit
+  packageVersion: 1.0
+  assetPath: Assets/Arkeh_3D/Substation138kV/Prefabs/Disconnector_DoubleBreak_138kV.prefab
+  uploadId: 1024522

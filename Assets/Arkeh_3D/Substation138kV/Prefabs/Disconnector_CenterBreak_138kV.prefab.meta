@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 24489a86b14154d46a75b744c25716da
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 419036
+  packageName: Substation 138 kV Kit
+  packageVersion: 1.0
+  assetPath: Assets/Arkeh_3D/Substation138kV/Prefabs/Disconnector_CenterBreak_138kV.prefab
+  uploadId: 1024522

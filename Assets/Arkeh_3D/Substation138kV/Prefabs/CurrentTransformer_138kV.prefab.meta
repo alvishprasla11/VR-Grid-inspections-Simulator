@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 664361e8d7506b8498f99d4b51cb0380
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 419036
+  packageName: Substation 138 kV Kit
+  packageVersion: 1.0
+  assetPath: Assets/Arkeh_3D/Substation138kV/Prefabs/CurrentTransformer_138kV.prefab
+  uploadId: 1024522

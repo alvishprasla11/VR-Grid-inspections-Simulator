@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 164d9e678eefb384ebe40afaeb12fdd2
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 419036
+  packageName: Substation 138 kV Kit
+  packageVersion: 1.0
+  assetPath: Assets/Arkeh_3D/Substation138kV/Materials/M_GalvanizedSteel.mat
+  uploadId: 1024522

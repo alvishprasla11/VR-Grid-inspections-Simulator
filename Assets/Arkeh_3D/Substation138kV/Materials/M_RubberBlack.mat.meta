@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 85ab5fbe325fc364db5dd0c58d377da7
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 419036
+  packageName: Substation 138 kV Kit
+  packageVersion: 1.0
+  assetPath: Assets/Arkeh_3D/Substation138kV/Materials/M_RubberBlack.mat
+  uploadId: 1024522

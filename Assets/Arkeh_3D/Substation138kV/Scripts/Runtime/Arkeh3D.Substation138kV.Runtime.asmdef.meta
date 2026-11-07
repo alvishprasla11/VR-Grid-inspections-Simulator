@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 61b1280632412614290c2b7a612bffd3
+AssemblyDefinitionImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 419036
+  packageName: Substation 138 kV Kit
+  packageVersion: 1.0
+  assetPath: Assets/Arkeh_3D/Substation138kV/Scripts/Runtime/Arkeh3D.Substation138kV.Runtime.asmdef
+  uploadId: 1024522

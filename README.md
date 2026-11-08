@@ -1,4 +1,6 @@
-# GridSight VR Grid Drone Training Simulator
+# RVQ11B - Slaves of AI - GridSight VR
+
+## GridSight VR Grid Drone Training Simulator
 
 GridSight is a Unity virtual-reality training simulator for electric-grid drone
 operators. The trainee works from a grid control room, launches an FPV drone

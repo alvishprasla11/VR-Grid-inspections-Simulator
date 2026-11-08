@@ -29,9 +29,11 @@ public class MissionUrgency : MonoBehaviour {
                 break;
             default:
                 TimeLimitSeconds = baseTimeLimit; SpeedWeight = 1f;
-                DispatchMessage = "Normal grid conditions. Inspect the section carefully and report the fault.";
+                DispatchMessage = "DAMAGE DETECTED. FIND AND INSPECT WITH THE DRONE.";
                 break;
         }
+        if (PlayerPrefs.GetString("GridSightRepairStatus", "") == "DISPATCHED REPAIRMEN")
+            DispatchMessage = "DISPATCHED — FAULT PHOTO CAPTURED. REPAIR CREW NOTIFIED.";
         if (dispatchText) dispatchText.text = DispatchMessage;
     }
 }

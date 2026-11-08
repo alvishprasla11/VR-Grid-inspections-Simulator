@@ -25,6 +25,7 @@ public class OSDController : MonoBehaviour
     public TextMeshProUGUI speedText;
 
     private float startAltitude;
+    private Transform damageTarget;
 
     // Start is called before the first frame update
     void Start()
@@ -39,6 +40,11 @@ public class OSDController : MonoBehaviour
 
         // Set the starting altitude so we can measure altitude from our takeoff point
         startAltitude = droneController.transform.position.y;
+        var electricity = GameObject.Find("Electricity");
+        if (electricity != null)
+            damageTarget = electricity.transform;
+        else
+            Debug.LogWarning("OSD could not find the Electricity outage target.", this);
     }
 
     // Update is called once per frame
@@ -46,9 +52,11 @@ public class OSDController : MonoBehaviour
     {
         if (droneController == null) return;
 
-        // --- Update Flight Mode ---
-        // Access the public property from the drone controller
-        flightModeText.text = droneController.CurrentMode.ToString().ToUpper();
+        // --- Update distance to simulated damage ---
+        if (damageTarget != null)
+            flightModeText.text = $"DAMAGE: {Vector3.Distance(droneController.transform.position, damageTarget.position):F1} m";
+        else
+            flightModeText.text = "DAMAGE: —";
 
         // --- Update Throttle ---
         // Access the public property, multiply by 100, and format as a whole number (F0)

@@ -73,6 +73,7 @@ public class DroneController : MonoBehaviour
         questControlActive = true;
         questArmed = armed;
         questVerticalInput = Mathf.Clamp(vertical, -1f, 1f);
+        throttleInput = questArmed ? questVerticalInput : 0f;
         questMovement = Vector3.ClampMagnitude(movement, 1f);
         questYawInput = ApplyDeadzone(yaw);
         SetRotorRunning(questArmed);

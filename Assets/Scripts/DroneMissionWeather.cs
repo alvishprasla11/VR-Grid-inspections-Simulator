@@ -18,9 +18,42 @@ public sealed class DroneMissionWeather : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Install()
     {
+        ClearSessionEvidence();
+        Application.quitting -= OnApplicationQuitting;
+        Application.quitting += OnApplicationQuitting;
         SceneManager.sceneLoaded -= OnSceneLoaded;
         SceneManager.sceneLoaded += OnSceneLoaded;
         OnSceneLoaded(SceneManager.GetActiveScene(), new LoadSceneMode());
+    }
+
+    static void OnApplicationQuitting()
+    {
+        ClearSessionEvidence();
+    }
+
+    static void ClearSessionEvidence()
+    {
+        string savedPath = PlayerPrefs.GetString(PhotoPathKey, "");
+        string defaultPath = Path.Combine(Application.persistentDataPath, "gridsight_fault_photo.png");
+        try
+        {
+            if (!string.IsNullOrEmpty(savedPath) && File.Exists(savedPath))
+                File.Delete(savedPath);
+            if (savedPath != defaultPath && File.Exists(defaultPath))
+                File.Delete(defaultPath);
+        }
+        catch (System.IO.IOException exception)
+        {
+            Debug.LogError($"GridSight could not clear the previous fault photo: {exception.Message}");
+        }
+        catch (System.UnauthorizedAccessException exception)
+        {
+            Debug.LogError($"GridSight has no permission to clear the previous fault photo: {exception.Message}");
+        }
+
+        PlayerPrefs.DeleteKey(PhotoPathKey);
+        PlayerPrefs.DeleteKey("GridSightRepairStatus");
+        PlayerPrefs.Save();
     }
 
     static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -228,6 +261,29 @@ public sealed class DroneMissionWeather : MonoBehaviour
     {
         captureStarted = true;
         string path = Path.Combine(Application.persistentDataPath, "gridsight_fault_photo.png");
+        string previousPath = PlayerPrefs.GetString(PhotoPathKey, "");
+        try
+        {
+            if (!string.IsNullOrEmpty(previousPath) && File.Exists(previousPath))
+                File.Delete(previousPath);
+            if (previousPath != path && File.Exists(path))
+                File.Delete(path);
+        }
+        catch (System.IO.IOException exception)
+        {
+            Debug.LogError($"GridSight could not remove the previous fault photo: {exception.Message}", this);
+            captureStarted = false;
+            yield break;
+        }
+        catch (System.UnauthorizedAccessException exception)
+        {
+            Debug.LogError($"GridSight has no permission to remove the previous fault photo: {exception.Message}", this);
+            captureStarted = false;
+            yield break;
+        }
+        PlayerPrefs.DeleteKey(PhotoPathKey);
+        PlayerPrefs.DeleteKey("GridSightRepairStatus");
+        PlayerPrefs.Save();
         yield return new WaitForEndOfFrame();
         var camera = Camera.main;
         if (camera == null)
@@ -317,12 +373,6 @@ public sealed class DroneMissionWeather : MonoBehaviour
 
     void OnApplicationQuit()
     {
-        string path = PlayerPrefs.GetString(PhotoPathKey, "");
-        if (!string.IsNullOrEmpty(path) && File.Exists(path))
-            File.Delete(path);
-
-        PlayerPrefs.DeleteKey(PhotoPathKey);
-        PlayerPrefs.DeleteKey("GridSightRepairStatus");
-        PlayerPrefs.Save();
+        ClearSessionEvidence();
     }
 }

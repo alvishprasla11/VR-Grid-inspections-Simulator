@@ -29,14 +29,14 @@ public static class GridSightControlRoomBuilder {
         var room = new GameObject("ControlRoom").transform;
         var dark = Lit(new Color(0.06f, 0.09f, 0.13f)); var wall = Lit(new Color(0.09f, 0.13f, 0.19f));
         var glow = Unlit(Cyan);
-        Box("Floor", room, new Vector3(0, -0.05f, 1), new Vector3(9, 0.1f, 10), dark);
-        Box("Ceiling", room, new Vector3(0, 3.6f, 1), new Vector3(9, 0.1f, 10), dark);
-        Box("WallFront", room, new Vector3(0, 1.8f, 4.5f), new Vector3(9, 3.6f, 0.1f), wall);
-        Box("WallBack", room, new Vector3(0, 1.8f, -3.2f), new Vector3(9, 3.6f, 0.1f), wall);
-        Box("WallLeft", room, new Vector3(-4.5f, 1.8f, 1), new Vector3(0.1f, 3.6f, 10), wall);
-        Box("WallRight", room, new Vector3(4.5f, 1.8f, 1), new Vector3(0.1f, 3.6f, 10), wall);
+        Box("Floor", room, new Vector3(0, -0.05f, 1), new Vector3(10, 0.1f, 10), dark);
+        Box("Ceiling", room, new Vector3(0, 3.6f, 1), new Vector3(10, 0.1f, 10), dark);
+        Box("WallFront", room, new Vector3(0, 1.8f, 4.5f), new Vector3(10, 3.6f, 0.1f), wall);
+        Box("WallBack", room, new Vector3(0, 1.8f, -3.2f), new Vector3(10, 3.6f, 0.1f), wall);
+        Box("WallLeft", room, new Vector3(-5f, 1.8f, 1), new Vector3(0.1f, 3.6f, 10), wall);
+        Box("WallRight", room, new Vector3(5f, 1.8f, 1), new Vector3(0.1f, 3.6f, 10), wall);
         for (int i = -3; i <= 3; i++) Box("LightStrip", room, new Vector3(i * 1.2f, 3.52f, 1), new Vector3(0.06f, 0.04f, 8), glow);
-        Box("FloorTrim", room, new Vector3(0, 0.02f, 4.42f), new Vector3(9, 0.04f, 0.04f), glow);
+        Box("FloorTrim", room, new Vector3(0, 0.02f, 4.42f), new Vector3(10, 0.04f, 0.04f), glow);
         foreach (var x in new[] { -2.5f, 2.5f }) {
             var l = new GameObject("RoomLight").AddComponent<Light>(); l.type = LightType.Point; l.range = 8; l.intensity = 1.2f;
             l.color = new Color(0.75f, 0.85f, 1f); l.transform.SetParent(room); l.transform.position = new Vector3(x, 3.1f, 1.2f);

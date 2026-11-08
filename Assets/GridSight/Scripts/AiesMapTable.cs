@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
+using System.IO;
 
 [Serializable] public class AiesLine { public int kv; public float[] pts; }
 [Serializable] public class AiesOutline { public string kind; public float[] pts; }
@@ -44,7 +46,9 @@ public class AiesMapTable : MonoBehaviour {
         if (mapJson == null) { Debug.LogWarning("AiesMapTable: assign aies_calgary_inset.json"); return; }
         map = JsonUtility.FromJson<AiesMap>(mapJson.text);
         depth = width / Mathf.Max(0.1f, map.aspect);
-        lineMat = new Material(Shader.Find("Sprites/Default"));
+        Shader lineShader = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color") ?? Shader.Find("Sprites/Default");
+        lineMat = new Material(lineShader) { color = Color.white };
+        lineMat.enableInstancing = true;
         foreach (Transform c in transform) Destroy(c.gameObject);
         stations.Clear();
 
@@ -77,6 +81,10 @@ public class AiesMapTable : MonoBehaviour {
             foreach (var p in map.places) Label(p.name.ToUpper(), P(p.x, p.y, 0.02f), 0.35f, new Color(1f, 0.85f, 0.4f, 0.8f));
         Label("Source: AESO Alberta Interconnected Electric System Map 2026 (Calgary Area Detail)",
               new Vector3(0, lift, -depth / 2 - 0.05f), 0.14f, new Color(0.7f, 0.85f, 1f, 0.8f));
+        if (string.IsNullOrEmpty(PlayerPrefs.GetString("GridSightFaultPhotoPath", "")))
+            AddOutageInstruction();
+        else
+            AddEvidencePanel();
 
         // outage ring (hidden until ShowOutage)
         var rg = new GameObject("OutageRing"); rg.transform.SetParent(transform, false);
@@ -91,13 +99,19 @@ public class AiesMapTable : MonoBehaviour {
         if (pts == null || pts.Length < 4) return;
         var go = new GameObject(name); go.transform.SetParent(transform, false);
         var lr = go.AddComponent<LineRenderer>();
-        lr.useWorldSpace = false; lr.material = lineMat; lr.startColor = lr.endColor = c; lr.widthMultiplier = w;
-        lr.numCapVertices = 2; lr.alignment = LineAlignment.TransformZ;
+        var material = ColoredMaterial(c);
+        lr.useWorldSpace = false; lr.material = material; lr.startColor = lr.endColor = c; lr.widthMultiplier = w;
+        lr.numCapVertices = 6; lr.numCornerVertices = 6;
+        lr.alignment = LineAlignment.View;
+        lr.textureMode = LineTextureMode.Stretch;
+        lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        lr.receiveShadows = false;
         lr.positionCount = pts.Length / 2;
         for (int i = 0; i < pts.Length / 2; i++) {
             var p = P(pts[2 * i], pts[2 * i + 1], up);
             lr.SetPosition(i, p);
         }
+
         if (clickable) {
             faultLine = lr;
             var target = go.AddComponent<GridFaultClickTarget>();
@@ -105,6 +119,51 @@ public class AiesMapTable : MonoBehaviour {
             target.points = pts;
             target.map = this;
         }
+    }
+
+    void AddOutageInstruction() {
+        var label = Label("CLICK ON OUTAGES TO CHECK THEM OUT WITH DRONE",
+            new Vector3(0f, lift - 0.02f, -depth / 2 - 0.13f), 0.16f, Color.white);
+        label.transform.localRotation = Quaternion.Euler(78f, 0f, 0f);
+    }
+
+    void AddEvidencePanel() {
+        string path = PlayerPrefs.GetString("GridSightFaultPhotoPath", "");
+        if (string.IsNullOrEmpty(path) || !File.Exists(path)) return;
+        var panel = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        panel.name = "FaultEvidencePhotoPanel";
+        panel.transform.SetParent(transform, false);
+        panel.transform.localPosition = new Vector3(0.98f, lift + 0.18f, -depth / 2 - 0.25f);
+        panel.transform.localScale = new Vector3(0.85f, 0.06f, 0.62f);
+        panel.GetComponent<Renderer>().material = ColoredMaterial(new Color(0.04f, 0.08f, 0.12f, 1f));
+        var canvasObject = new GameObject("FaultEvidencePhoto", typeof(RectTransform), typeof(Canvas));
+        canvasObject.transform.SetParent(transform, false);
+        canvasObject.transform.localPosition = panel.transform.localPosition + new Vector3(0f, 0.06f, 0f);
+        canvasObject.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+        canvasObject.transform.localScale = Vector3.one * 0.001f;
+        canvasObject.GetComponent<Canvas>().renderMode = RenderMode.WorldSpace;
+        var rect = canvasObject.GetComponent<RectTransform>();
+        rect.sizeDelta = new Vector2(850f, 500f);
+        var imageObject = new GameObject("CapturedFaultImage", typeof(RectTransform), typeof(RawImage));
+        imageObject.transform.SetParent(canvasObject.transform, false);
+        var imageRect = imageObject.GetComponent<RectTransform>();
+        imageRect.anchorMin = Vector2.zero; imageRect.anchorMax = Vector2.one;
+        imageRect.offsetMin = Vector2.zero; imageRect.offsetMax = Vector2.zero;
+        var texture = new Texture2D(2, 2);
+        texture.LoadImage(File.ReadAllBytes(path));
+        imageObject.GetComponent<RawImage>().texture = texture;
+        Label("DISPATCHED REPAIRMEN", panel.transform.localPosition + new Vector3(0f, 0.08f, 0.37f), 0.2f, Color.white);
+    }
+
+    Material ColoredMaterial(Color color) {
+        var material = new Material(lineMat) { color = color };
+        if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
+        if (material.HasProperty("_Color")) material.SetColor("_Color", color);
+        if (color == FaultLineColor && material.HasProperty("_EmissionColor")) {
+            material.EnableKeyword("_EMISSION");
+            material.SetColor("_EmissionColor", color * 3f);
+        }
+        return material;
     }
 
     TextMeshPro Label(string text, Vector3 localPos, float size, Color c) {

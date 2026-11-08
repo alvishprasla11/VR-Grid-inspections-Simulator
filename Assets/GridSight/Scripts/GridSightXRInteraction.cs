@@ -5,11 +5,16 @@ using UnityEngine.InputSystem.XR;
 public sealed class GridSightXRInteraction : MonoBehaviour
 {
     [SerializeField] private float rayLength = 6f;
+    [SerializeField] private float moveSpeed = 1.5f;
+    [SerializeField] private float turnSpeed = 75f;
+    [SerializeField] private float stickDeadzone = 0.15f;
     [SerializeField] private LayerMask rayMask = Physics.DefaultRaycastLayers;
 
     private InputAction controllerPosition;
     private InputAction controllerRotation;
     private InputAction trigger;
+    private InputAction leftStick;
+    private InputAction rightStick;
     private bool previousTrigger;
     private LineRenderer ray;
     private Transform trackingOrigin;
@@ -23,6 +28,10 @@ public sealed class GridSightXRInteraction : MonoBehaviour
         trigger.AddBinding("<XRController>{RightHand}/triggerPressed");
         trigger.AddBinding("<OculusTouchController>{RightHand}/trigger");
         trigger.AddBinding("<OculusTouchController>{RightHand}/triggerPressed");
+        leftStick = new InputAction("GridSightMove", InputActionType.Value, "<XRController>{LeftHand}/primary2DAxis");
+        leftStick.AddBinding("<OculusTouchController>{LeftHand}/thumbstick");
+        rightStick = new InputAction("GridSightTurn", InputActionType.Value, "<XRController>{RightHand}/primary2DAxis");
+        rightStick.AddBinding("<OculusTouchController>{RightHand}/thumbstick");
 
         ray = gameObject.AddComponent<LineRenderer>();
         ray.useWorldSpace = true;
@@ -49,6 +58,8 @@ public sealed class GridSightXRInteraction : MonoBehaviour
         controllerPosition.Enable();
         controllerRotation.Enable();
         trigger.Enable();
+        leftStick.Enable();
+        rightStick.Enable();
     }
 
     private void OnDisable()
@@ -56,10 +67,13 @@ public sealed class GridSightXRInteraction : MonoBehaviour
         controllerPosition.Disable();
         controllerRotation.Disable();
         trigger.Disable();
+        leftStick.Disable();
+        rightStick.Disable();
     }
 
     private void Update()
     {
+        ApplyLocomotion();
         if (controllerPosition.activeControl == null || controllerRotation.activeControl == null)
         {
             ray.enabled = false;
@@ -68,7 +82,8 @@ public sealed class GridSightXRInteraction : MonoBehaviour
         }
 
         Vector3 origin = trackingOrigin.TransformPoint(controllerPosition.ReadValue<Vector3>());
-        Quaternion rotationValue = trackingOrigin.rotation * controllerRotation.ReadValue<Quaternion>();
+        Quaternion rotationValue = trackingOrigin.rotation *
+            controllerRotation.ReadValue<Quaternion>() * Quaternion.Euler(10f, 0f, 0f);
         ray.enabled = true;
         ray.SetPosition(0, origin);
         ray.SetPosition(1, origin + rotationValue * Vector3.forward * rayLength);
@@ -89,6 +104,23 @@ public sealed class GridSightXRInteraction : MonoBehaviour
             }
         }
         previousTrigger = pressed;
+    }
+
+    private void ApplyLocomotion()
+    {
+        if (trackingOrigin == null) return;
+        Vector2 move = leftStick.ReadValue<Vector2>();
+        if (move.magnitude < stickDeadzone) move = Vector2.zero;
+        else move = Vector2.ClampMagnitude(move, 1f);
+        Vector3 forward = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
+        Vector3 right = Vector3.Cross(Vector3.up, forward);
+        trackingOrigin.position += (right * move.x + forward * move.y) * moveSpeed * Time.deltaTime;
+
+        Vector2 turn = rightStick.ReadValue<Vector2>();
+        if (Mathf.Abs(turn.x) < stickDeadzone) return;
+        float angle = turn.x * turnSpeed * Time.deltaTime;
+        Vector3 pivot = transform.position;
+        trackingOrigin.RotateAround(pivot, Vector3.up, angle);
     }
 
     private void OnDestroy()

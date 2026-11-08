@@ -1,11 +1,13 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// Turns the real grid stress level into mission stakes.
 /// Your mission / scoring code reads TimeLimitSeconds, SpeedWeight and DispatchMessage.
 public class MissionUrgency : MonoBehaviour {
     public TMP_Text dispatchText;          // the dispatch call shown before launch
     public float baseTimeLimit = 300f;     // seconds for a normal-day mission
+    static readonly Color DispatchedColor = new Color(1f, 0.48f, 0.04f, 1f);
 
     public float TimeLimitSeconds { get; private set; } = 300f;
     public float SpeedWeight { get; private set; } = 1f;
@@ -32,8 +34,21 @@ public class MissionUrgency : MonoBehaviour {
                 DispatchMessage = "DAMAGE DETECTED. FIND AND INSPECT WITH THE DRONE.";
                 break;
         }
-        if (PlayerPrefs.GetString("GridSightRepairStatus", "") == "DISPATCHED REPAIRMEN")
+        bool dispatched = PlayerPrefs.GetString("GridSightRepairStatus", "") == "DISPATCHED REPAIRMEN";
+        if (dispatched)
             DispatchMessage = "DISPATCHED — FAULT PHOTO CAPTURED. REPAIR CREW NOTIFIED.";
-        if (dispatchText) dispatchText.text = DispatchMessage;
+        if (dispatchText) {
+            dispatchText.text = DispatchMessage;
+            var header = dispatchText.transform.parent.Find("Header")?.GetComponent<TMP_Text>();
+            if (header != null) {
+                header.text = dispatched ? "DISPATCHED" : "DISPATCH";
+                header.color = dispatched ? DispatchedColor : new Color(1f, 0.45f, 0.45f);
+            }
+            var background = dispatchText.transform.parent.Find("Bg")?.GetComponent<Image>();
+            if (background != null)
+                background.color = dispatched
+                    ? new Color(0.20f, 0.10f, 0.02f, 0.95f)
+                    : new Color(0.12f, 0.05f, 0.06f, 0.95f);
+        }
     }
 }

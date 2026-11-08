@@ -83,7 +83,7 @@ public sealed class GridSightXRInteraction : MonoBehaviour
 
         Vector3 origin = trackingOrigin.TransformPoint(controllerPosition.ReadValue<Vector3>());
         Quaternion rotationValue = trackingOrigin.rotation *
-            controllerRotation.ReadValue<Quaternion>() * Quaternion.Euler(30f, 0f, 0f);
+            controllerRotation.ReadValue<Quaternion>() * Quaternion.Euler(35f, 0f, 0f);
         ray.enabled = true;
         ray.SetPosition(0, origin);
         ray.SetPosition(1, origin + rotationValue * Vector3.forward * rayLength);

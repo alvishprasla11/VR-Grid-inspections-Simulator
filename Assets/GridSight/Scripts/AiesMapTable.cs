@@ -223,15 +223,9 @@ public class AiesMapTable : MonoBehaviour {
     void AddEvidencePanel() {
         string path = PlayerPrefs.GetString("GridSightFaultPhotoPath", "");
         if (string.IsNullOrEmpty(path) || !File.Exists(path)) return;
-        var panel = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        panel.name = "FaultEvidencePhotoPanel";
-        panel.transform.SetParent(transform, false);
-        panel.transform.localPosition = new Vector3(-0.98f, lift + 0.18f, -depth / 2 - 0.25f);
-        panel.transform.localScale = new Vector3(0.85f, 0.06f, 0.62f);
-        panel.GetComponent<Renderer>().material = ColoredMaterial(new Color(0.04f, 0.08f, 0.12f, 1f));
         var canvasObject = new GameObject("FaultEvidencePhoto", typeof(RectTransform), typeof(Canvas));
         canvasObject.transform.SetParent(transform, false);
-        canvasObject.transform.localPosition = panel.transform.localPosition + new Vector3(0f, 0.06f, 0f);
+        canvasObject.transform.localPosition = new Vector3(-0.98f, lift + 0.18f, -depth / 2 - 0.25f);
         canvasObject.transform.localRotation = Quaternion.Euler(78f, 0f, 0f);
         canvasObject.transform.localScale = Vector3.one * 0.001f;
         canvasObject.GetComponent<Canvas>().renderMode = RenderMode.WorldSpace;
@@ -248,7 +242,6 @@ public class AiesMapTable : MonoBehaviour {
         }
         catch (System.IO.IOException exception) {
             Debug.LogError($"GridSight could not read the captured fault photo at {path}: {exception.Message}", this);
-            Destroy(panel);
             Destroy(canvasObject);
             return;
         }
@@ -256,12 +249,11 @@ public class AiesMapTable : MonoBehaviour {
         if (!texture.LoadImage(bytes, false)) {
             Destroy(texture);
             Debug.LogError($"GridSight could not decode the captured fault photo at {path}.", this);
-            Destroy(panel);
             Destroy(canvasObject);
             return;
         }
         imageObject.GetComponent<RawImage>().texture = texture;
-        var status = Label("DISPATCHED", panel.transform.localPosition + new Vector3(0f, 0.08f, 0.37f), 0.2f, DispatchedLineColor);
+        var status = Label("DISPATCHED", canvasObject.transform.localPosition + new Vector3(0f, 0.08f, 0.37f), 0.2f, DispatchedLineColor);
         status.fontStyle = FontStyles.Bold;
     }
 

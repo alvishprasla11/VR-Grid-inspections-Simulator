@@ -87,24 +87,14 @@ public static class GridSightControlRoomBuilder {
 
         // ---------- operator console (right of the player) ----------
         var con = WorldCanvas("OperatorConsole", new Vector3(1.2f, 1.15f, 0.2f), Quaternion.Euler(35, 40, 0), new Vector2(900, 1000), cam);
+        con.localScale = Vector3.one * 0.00078f;
         Img(con, "Bg", Vector2.zero, new Vector2(900, 1000), Panel);
         Txt(con, "Header", "OPERATOR CONSOLE", new Vector2(0, 430), new Vector2(860, 90), 56, Cyan, FontStyles.Bold);
         Btn(con, "1 · Outage alert", new Vector2(0, 290), new Color(0.75f, 0.15f, 0.15f), map.ShowOutage);
         Btn(con, "2 · Crew en route", new Vector2(0, 150), new Color(0.8f, 0.55f, 0.1f), map.CrewEnRoute);
         Btn(con, "3 · Power restored", new Vector2(0, 10), new Color(0.15f, 0.6f, 0.3f), map.Restored);
-        Btn(con, "Replay real grid-alert day", new Vector2(0, -170), new Color(0.2f, 0.35f, 0.7f), replay.StartReplay);
+        Btn(con, "Replay Jan 3 2022 record-demand day", new Vector2(0, -170), new Color(0.2f, 0.35f, 0.7f), replay.StartReplay);
         Btn(con, "Back to live data", new Vector2(0, -310), new Color(0.25f, 0.3f, 0.38f), replay.StopReplay);
-
-        // ---------- impact screen (right wall) ----------
-        var imp = WorldCanvas("ImpactScreen", new Vector3(4.4f, 1.45f, -0.6f), Quaternion.Euler(0, 90, 0), new Vector2(2600, 1300), cam);
-        Img(imp, "Bg", Vector2.zero, new Vector2(2600, 1300), Panel);
-        Txt(imp, "Header", "COMMUNITY IMPACT · REAL RELIABILITY DATA", new Vector2(0, 540), new Vector2(2500, 110), 70, Cyan, FontStyles.Bold);
-        var impact = imp.gameObject.AddComponent<ImpactScreen>();
-        impact.baselineText = Txt(imp, "Baseline", "", new Vector2(0, 300), new Vector2(2450, 260), 66, Ink);
-        impact.resultText = Txt(imp, "Result", "", new Vector2(0, -20), new Vector2(2450, 260), 72, new Color(0.4f, 1f, 0.6f));
-        impact.minutesSavedSlider = MakeSlider(imp, new Vector2(0, -260), new Vector2(1800, 70));
-        Txt(imp, "SliderLabel", "What-if: minutes saved per outage (0–30)", new Vector2(0, -350), new Vector2(2400, 80), 50, Muted);
-        impact.sourceText = Txt(imp, "Source", "", new Vector2(0, -540), new Vector2(2450, 90), 44, Muted);
 
         // ---------- replay wiring ----------
         replay.dashboard = dash; replay.urgency = urgency;

@@ -1,10 +1,19 @@
 # ninja log v5
-2	1056	1794087244207461783	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	8b6c6992d64d3579
-6	1059	1794087244213451063	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	b6798990e49e290
-5	1093	1794087244244627750	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	c323358065c0a572
-2	1102	1794087244257037017	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	f36d0afbfb10b0f8
-1	1104	1794087244257224350	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	dcb68087b23bfbdb
-7	1167	1794087244320253514	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	e8a12a795925878d
-2	1343	1794087244496995781	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	161d010ebdf1cbcf
-0	1425	1794087244579229365	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	787eeeddf21cb30a
 1425	1503	1794087244659026121	/Users/alvishprasla/UnityFPVDroneSimulator/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/546p4x24/obj/arm64-v8a/libgame.so	5fed241118cf3ac0
+0	1425	1794087244579229365	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	787eeeddf21cb30a
+2	1343	1794087244496995781	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	161d010ebdf1cbcf
+7	1167	1794087244320253514	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	e8a12a795925878d
+1	1104	1794087244257224350	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	dcb68087b23bfbdb
+2	1102	1794087244257037017	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	f36d0afbfb10b0f8
+5	1093	1794087244244627750	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	c323358065c0a572
+6	1059	1794087244213451063	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	b6798990e49e290
+2	1056	1794087244207461783	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	8b6c6992d64d3579
+3	563	1794119066825605912	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	dcb68087b23bfbdb
+3	576	1794119066837772384	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	f36d0afbfb10b0f8
+4	577	1794119066839539095	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	c323358065c0a572
+6	604	1794119066867499584	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	b6798990e49e290
+3	608	1794119066872833090	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	8b6c6992d64d3579
+6	656	1794119066920532893	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	e8a12a795925878d
+3	696	1794119066960432729	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	161d010ebdf1cbcf
+3	766	1794119067029880806	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	787eeeddf21cb30a
+766	814	1794119067079459361	/Users/alvishprasla/UnityFPVDroneSimulator/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/546p4x24/obj/arm64-v8a/libgame.so	5fed241118cf3ac0

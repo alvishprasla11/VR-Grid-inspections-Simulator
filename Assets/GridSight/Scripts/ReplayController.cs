@@ -6,9 +6,9 @@ using UnityEngine;
 public class ReplayController : MonoBehaviour {
     public ControlRoomDashboard dashboard;
     public MissionUrgency urgency;
-    public string replayFile = "replay_2024-01-13.json";
+    public string replayFile = "replay_2022-01-03.json";
     [Tooltip("Real seconds per historical hour")] public float secondsPerHour = 10f;
-    [Tooltip("Start at this hour of the day (e.g. 16 = 4 pm)")] public int startHour = 16;
+    [Tooltip("Start at this hour of the day (e.g. 16 = 4 pm)")]     public int startHour = 18;
 
     bool running;
 

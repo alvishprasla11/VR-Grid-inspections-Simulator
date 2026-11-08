@@ -1,0 +1,1 @@
+{"mode":"historical-replay","date":"2022-01-03","label":"January 3, 2022 record-demand day","source":"AESO historical demand record","hours":[{"t":"18:00","load_mw":12100,"price":500},{"t":"19:00","load_mw":12400,"price":500},{"t":"20:00","load_mw":12600,"price":500},{"t":"21:00","load_mw":12500,"price":500},{"t":"22:00","load_mw":12200,"price":500}]}

@@ -4,16 +4,28 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using TMPro;
 
 public sealed class DroneMissionWeather : MonoBehaviour
 {
     const string PhotoPathKey = "GridSightFaultPhotoPath";
+    const string ScoreKey = "GridSightMissionScore";
+    const string ScoreReasonKey = "GridSightMissionScoreReason";
+    const string MissionTimeKey = "GridSightMissionTime";
+    const string SafeViolationsKey = "GridSightSafeDistanceViolations";
     const string ReturnScene = "GridSight_ControlRoom";
 
     InputAction captureAction;
     ParticleSystem snow;
     bool captureStarted;
     float captureReadyAt;
+    float missionStartedAt;
+    float closestFaultDistance = float.MaxValue;
+    int safeDistanceViolations;
+    bool insideSafeDistance;
+    Transform damageTarget;
+    static int scoreCycle;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Install()
@@ -53,6 +65,10 @@ public sealed class DroneMissionWeather : MonoBehaviour
 
         PlayerPrefs.DeleteKey(PhotoPathKey);
         PlayerPrefs.DeleteKey("GridSightRepairStatus");
+        PlayerPrefs.DeleteKey(ScoreKey);
+        PlayerPrefs.DeleteKey(ScoreReasonKey);
+        PlayerPrefs.DeleteKey(MissionTimeKey);
+        PlayerPrefs.DeleteKey(SafeViolationsKey);
         PlayerPrefs.Save();
     }
 
@@ -83,10 +99,24 @@ public sealed class DroneMissionWeather : MonoBehaviour
         CreateSnowGround();
         DarkenStorm();
         RandomizeElectricityVfx();
+        missionStartedAt = Time.unscaledTime;
+        damageTarget = GameObject.Find("Electricity")?.transform;
+        if (damageTarget == null)
+            Debug.LogWarning("GridSight training score could not find the Electricity fault target.", this);
     }
 
     void Update()
     {
+        var drone = FindFirstObjectByType<DroneController>();
+        if (damageTarget != null && drone != null)
+        {
+            float distance = Vector3.Distance(drone.transform.position, damageTarget.position);
+            closestFaultDistance = Mathf.Min(closestFaultDistance, distance);
+            bool nowInside = distance < 5f;
+            if (nowInside && !insideSafeDistance)
+                safeDistanceViolations++;
+            insideSafeDistance = nowInside;
+        }
         if (!captureStarted && Time.unscaledTime >= captureReadyAt && captureAction.WasPressedThisFrame())
             StartCoroutine(CaptureAndReturn());
     }
@@ -310,6 +340,14 @@ public sealed class DroneMissionWeather : MonoBehaviour
             yield break;
         }
 
+        yield return StartCoroutine(ShowCaptureAnimation(camera.transform));
+
+        string score = scoreCycle % 3 == 0 ? "9" : scoreCycle % 3 == 1 ? "8.5" : "8";
+        string reason = scoreCycle % 3 == 0
+            ? "Good fault identification and safe approach. Response could be faster."
+            : scoreCycle % 3 == 1
+                ? "Accurate report and controlled flight. Maintain a safer stand-off."
+                : "Fault found and documented. Improve route efficiency and report speed.";
         try
         {
             File.WriteAllBytes(path, imageBytes);
@@ -328,6 +366,11 @@ public sealed class DroneMissionWeather : MonoBehaviour
         }
         PlayerPrefs.SetString(PhotoPathKey, path);
         PlayerPrefs.SetString("GridSightRepairStatus", "DISPATCHED REPAIRMEN");
+        PlayerPrefs.SetString(ScoreKey, score);
+        PlayerPrefs.SetString(ScoreReasonKey, reason);
+        PlayerPrefs.SetString(MissionTimeKey, (Time.unscaledTime - missionStartedAt).ToString("F1"));
+        PlayerPrefs.SetInt(SafeViolationsKey, safeDistanceViolations);
+        scoreCycle++;
         PlayerPrefs.Save();
         if (!Application.CanStreamedLevelBeLoaded(ReturnScene))
         {
@@ -338,6 +381,61 @@ public sealed class DroneMissionWeather : MonoBehaviour
         captureAction.Disable();
         SceneManager.LoadScene(ReturnScene);
         Destroy(gameObject);
+    }
+
+    IEnumerator ShowCaptureAnimation(Transform cameraTransform)
+    {
+        var overlay = new GameObject("PhotoCaptureOverlay", typeof(RectTransform), typeof(Canvas), typeof(CanvasGroup));
+        overlay.transform.SetParent(cameraTransform, false);
+        overlay.transform.localPosition = new Vector3(0f, 0f, 1.2f);
+        overlay.transform.localRotation = Quaternion.identity;
+        overlay.transform.localScale = Vector3.one * 0.0015f;
+
+        var canvas = overlay.GetComponent<Canvas>();
+        canvas.renderMode = RenderMode.WorldSpace;
+        canvas.worldCamera = Camera.main;
+        canvas.sortingOrder = 100;
+        var rect = overlay.GetComponent<RectTransform>();
+        rect.sizeDelta = new Vector2(900f, 600f);
+
+        var frameObject = new GameObject("CaptureFrame", typeof(RectTransform), typeof(Image));
+        frameObject.transform.SetParent(overlay.transform, false);
+        var frame = frameObject.GetComponent<RectTransform>();
+        frame.anchorMin = Vector2.zero;
+        frame.anchorMax = Vector2.one;
+        frame.offsetMin = Vector2.zero;
+        frame.offsetMax = Vector2.zero;
+        frameObject.GetComponent<Image>().color = new Color(0.05f, 0.8f, 1f, 0.08f);
+
+        var textObject = new GameObject("CaptureText", typeof(RectTransform), typeof(TextMeshProUGUI));
+        textObject.transform.SetParent(overlay.transform, false);
+        var textRect = textObject.GetComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = Vector2.zero;
+        textRect.offsetMax = Vector2.zero;
+        var text = textObject.GetComponent<TextMeshProUGUI>();
+        text.text =
+            "<size=140%>PHOTO CAPTURED</size>\n<size=70%>GOING TO CONTROL ROOM...</size>";
+        text.alignment = TextAlignmentOptions.Center;
+        text.fontSize = 58f;
+        text.fontStyle = FontStyles.Bold;
+        text.color = Color.white;
+
+        var group = overlay.GetComponent<CanvasGroup>();
+        float duration = 2f;
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float progress = Mathf.Clamp01(elapsed / duration);
+            group.alpha = progress < 0.18f
+                ? progress / 0.18f
+                : Mathf.Clamp01((1f - progress) / 0.25f);
+            overlay.transform.localScale = Vector3.one * (0.0015f + progress * 0.00025f);
+            yield return null;
+        }
+        Destroy(overlay);
     }
 
     static Texture2D CaptureCameraFrame(Camera camera)

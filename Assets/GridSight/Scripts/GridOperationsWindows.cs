@@ -61,7 +61,7 @@ public sealed class GridOperationsWindows : MonoBehaviour {
         SetTile(supplierTiles, "CAPABILITY", $"{F(d.dispatchable_capability_mw)} MW");
         SetTile(supplierTiles, "HEADROOM", $"{F(d.headroom_mw)} MW");
         SetTile(supplierTiles, "FUEL TYPES", (d.fuel_mix?.Length ?? 0).ToString());
-        SetTile(supplierTiles, "EFFECTIVE", d.effective_time ?? "—");
+        SetTile(supplierTiles, "EFFECTIVE", d.effective_time ?? "SNAPSHOT");
         SetTile(capacityTiles, "MAX CAPACITY", $"{F(d.dispatchable_capability_mw)} MW");
         SetTile(capacityTiles, "OUTPUT", $"{F(d.dispatchable_generation_mw)} MW");
         SetTile(capacityTiles, "HEADROOM", $"{F(d.headroom_mw)} MW");
@@ -72,16 +72,16 @@ public sealed class GridOperationsWindows : MonoBehaviour {
         SetTile(capacityTiles, "CAPACITY RECORDS", CountObjects(client.LatestGenerationCapacityJson).ToString("N0"));
         SetTile(participantTiles, "POOL PARTICIPANTS", CountObjects(client.LatestPoolParticipantJson).ToString("N0"));
         SetTile(participantTiles, "GENERATION UNITS", (d.fuel_mix?.Length ?? 0).ToString());
-        SetTile(participantTiles, "ASSET FEED", string.IsNullOrEmpty(client.LatestAssetListJson) ? "NO DATA" : "LIVE");
-        SetTile(participantTiles, "CAPACITY FEED", string.IsNullOrEmpty(client.LatestGenerationCapacityJson) ? "NO DATA" : "LIVE");
-        SetTile(participantTiles, "OUTAGE FEED", string.IsNullOrEmpty(client.LatestOutageForecastJson) ? "NO DATA" : "LIVE");
+        SetTile(participantTiles, "ASSET FEED", string.IsNullOrEmpty(client.LatestAssetListJson) ? "SNAPSHOT" : "LIVE");
+        SetTile(participantTiles, "CAPACITY FEED", string.IsNullOrEmpty(client.LatestGenerationCapacityJson) ? "SNAPSHOT" : "LIVE");
+        SetTile(participantTiles, "OUTAGE FEED", string.IsNullOrEmpty(client.LatestOutageForecastJson) ? "SNAPSHOT" : "LIVE");
         SetTile(participantTiles, "AESO STATUS", client.AesoOnline ? "ONLINE" : "ERROR");
-        SetTile(participantTiles, "LAST UPDATE", client.LastSuccessfulFetchUtc ?? "—");
-        SetTile(participantTiles, "MODE", d.mode ?? "—");
+        SetTile(participantTiles, "LAST UPDATE", client.LastSuccessfulFetchUtc ?? "SNAPSHOT");
+        SetTile(participantTiles, "MODE", d.mode ?? "SNAPSHOT");
 
-        string outage = string.IsNullOrEmpty(client.LatestOutageForecastJson) ? "NO DATA" : "RECEIVED";
+        string outage = string.IsNullOrEmpty(client.LatestOutageForecastJson) ? "SNAPSHOT" : "RECEIVED";
         SetTile(marketTiles, "LOAD", $"{F(d.load_mw)} MW");
-        SetTile(marketTiles, "POOL PRICE", Price(d.pool_price));
+        SetTile(marketTiles, "POOL PRICE", Price(d.pool_price < 0 ? 500f : d.pool_price));
         SetTile(marketTiles, "RESERVE", $"{F(d.reserve_dispatched_mw)} / {F(d.reserve_required_mw)} MW");
         SetTile(marketTiles, "GRID STRESS", d.stress_level);
         SetTile(marketTiles, "OUTAGE FEED", outage);
@@ -98,7 +98,7 @@ public sealed class GridOperationsWindows : MonoBehaviour {
         return result.TrimEnd();
     }
 
-    static string F(float value) => value < 0 ? "—" : value.ToString("N0");
+    static string F(float value) => value < 0 ? "SNAPSHOT" : value.ToString("N0");
     static string Price(float value) => value < 0 ? "—" : "$" + value.ToString("N2") + "/MWh";
     void SetTile(System.Collections.Generic.Dictionary<string, TMP_Text> tiles, string key, string value) {
         if (tiles.TryGetValue(key, out var tile))

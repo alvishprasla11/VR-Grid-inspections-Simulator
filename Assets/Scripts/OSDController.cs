@@ -54,9 +54,9 @@ public class OSDController : MonoBehaviour
 
         // --- Update distance to simulated damage ---
         if (damageTarget != null)
-            flightModeText.text = $"DAMAGE: {Vector3.Distance(droneController.transform.position, damageTarget.position):F1} m";
+            flightModeText.text = $"DISTANCE TO FAULT: {Vector3.Distance(droneController.transform.position, damageTarget.position):F1} m";
         else
-            flightModeText.text = "DAMAGE: —";
+            flightModeText.text = "DISTANCE TO FAULT: TARGET UNAVAILABLE";
 
         // --- Update Throttle ---
         // Access the public property, multiply by 100, and format as a whole number (F0)

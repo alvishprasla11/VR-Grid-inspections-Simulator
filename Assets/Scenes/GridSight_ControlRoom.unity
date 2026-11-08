@@ -1019,12 +1019,12 @@ GameObject:
   - component: {fileID: 256530792}
   - component: {fileID: 256530791}
   m_Layer: 0
-  m_Name: ImpactScreen
+  m_Name: ImpactScreen_Removed
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &256530791
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1131,8 +1131,8 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 256530790}
-  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 0, z: -0.6}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.55, z: 4.35}
   m_LocalScale: {x: 0.001, y: 0.001, z: 0.001}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -4699,7 +4699,7 @@ RectTransform:
   m_GameObject: {fileID: 1087932738}
   m_LocalRotation: {x: 0.28257102, y: 0.32619038, z: -0.102847435, w: 0.8962008}
   m_LocalPosition: {x: 0, y: 0, z: 0.2}
-  m_LocalScale: {x: 0.001, y: 0.001, z: 0.001}
+  m_LocalScale: {x: 0.00078, y: 0.00078, z: 0.00078}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 319052876}

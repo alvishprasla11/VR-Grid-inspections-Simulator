@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using System.IO;
+using UnityEngine.InputSystem;
 
 [Serializable] public class AiesLine { public int kv; public float[] pts; }
 [Serializable] public class AiesOutline { public string kind; public float[] pts; }
@@ -40,8 +41,42 @@ public class AiesMapTable : MonoBehaviour {
     AiesMap map; float depth; Material lineMat;
     readonly Dictionary<string, Transform> stations = new Dictionary<string, Transform>();
     LineRenderer ring, faultLine; TextMeshPro ringLabel; Color ringColor; bool pulsing;
+    InputAction dismissMissionAction;
+    GameObject missionCompleteOverlay;
 
-    void Start() { Build(); }
+    void Start() {
+        Build();
+        if (HasCapturedPhoto()) {
+            dismissMissionAction = new InputAction("DismissMissionComplete", InputActionType.Button,
+                "<XRController>{RightHand}/primaryButton");
+            dismissMissionAction.AddBinding("<OculusTouchController>{RightHand}/primaryButton");
+            dismissMissionAction.Enable();
+            StartCoroutine(ShowMissionCompleteAfterReturn());
+        }
+    }
+
+    void Update() {
+        if (missionCompleteOverlay != null && dismissMissionAction != null &&
+            dismissMissionAction.WasPressedThisFrame()) {
+            Destroy(missionCompleteOverlay);
+            missionCompleteOverlay = null;
+        }
+        if (faultLine != null) {
+            float brightness = 0.72f + 0.28f * (0.5f + 0.5f * Mathf.Sin(Time.time * 6f));
+            faultLine.startColor = faultLine.endColor = new Color(1f, brightness * 0.08f, brightness * 0.08f, 1f);
+            faultLine.widthMultiplier = 0.010f + brightness * 0.005f;
+        }
+        if (ring == null || !ring.enabled) return;
+        float s = pulsing ? 1f + 0.35f * Mathf.Sin(Time.time * 5f) : 1f;
+        ring.transform.localScale = Vector3.one;
+        ring.widthMultiplier = 0.008f * s;
+        var c = ringColor; c.a = pulsing ? 0.6f + 0.4f * Mathf.Sin(Time.time * 5f) : 1f; ring.startColor = ring.endColor = c;
+    }
+
+    void OnDestroy() {
+        dismissMissionAction?.Disable();
+        dismissMissionAction?.Dispose();
+    }
 
     public void Build() {
         if (mapJson == null) { Debug.LogWarning("AiesMapTable: assign aies_calgary_inset.json"); return; }
@@ -102,6 +137,57 @@ public class AiesMapTable : MonoBehaviour {
         return !string.IsNullOrEmpty(path) && File.Exists(path);
     }
 
+    System.Collections.IEnumerator ShowMissionCompleteAfterReturn() {
+        yield return new WaitForSecondsRealtime(2f);
+        if (missionCompleteOverlay != null || Camera.main == null) yield break;
+
+        missionCompleteOverlay = new GameObject("MissionCompleteOverlay",
+            typeof(RectTransform), typeof(Canvas), typeof(CanvasGroup));
+        missionCompleteOverlay.transform.SetParent(Camera.main.transform, false);
+        missionCompleteOverlay.transform.localPosition = new Vector3(0f, 0f, 1.35f);
+        missionCompleteOverlay.transform.localRotation = Quaternion.identity;
+        missionCompleteOverlay.transform.localScale = Vector3.one * 0.0015f;
+
+        var canvas = missionCompleteOverlay.GetComponent<Canvas>();
+        canvas.renderMode = RenderMode.WorldSpace;
+        canvas.worldCamera = Camera.main;
+        canvas.sortingOrder = 200;
+        var rect = missionCompleteOverlay.GetComponent<RectTransform>();
+        rect.sizeDelta = new Vector2(1000f, 700f);
+
+        var background = new GameObject("MissionCompleteBackground", typeof(RectTransform), typeof(Image));
+        background.transform.SetParent(missionCompleteOverlay.transform, false);
+        var backgroundRect = background.GetComponent<RectTransform>();
+        backgroundRect.anchorMin = Vector2.zero;
+        backgroundRect.anchorMax = Vector2.one;
+        backgroundRect.offsetMin = Vector2.zero;
+        backgroundRect.offsetMax = Vector2.zero;
+        background.GetComponent<Image>().color = new Color(0.01f, 0.04f, 0.08f, 0.88f);
+
+        var textObject = new GameObject("MissionCompleteText", typeof(RectTransform), typeof(TextMeshProUGUI));
+        textObject.transform.SetParent(missionCompleteOverlay.transform, false);
+        var textRect = textObject.GetComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = new Vector2(40f, 40f);
+        textRect.offsetMax = new Vector2(-40f, -40f);
+        var text = textObject.GetComponent<TextMeshProUGUI>();
+        string score = PlayerPrefs.GetString("GridSightMissionScore", "8");
+        string reason = PlayerPrefs.GetString("GridSightMissionScoreReason",
+            "Fault found and documented. Improve route efficiency and report speed.");
+        string time = PlayerPrefs.GetString("GridSightMissionTime", "—");
+        int safeViolations = PlayerPrefs.GetInt("GridSightSafeDistanceViolations", 0);
+        text.text = $"<size=145%>MISSION COMPLETED</size>\n\n" +
+            $"<size=120%>{score}/10</size>\n\n" +
+            $"<size=70%>FAULTS FOUND: 1\nSAFE-DISTANCE VIOLATIONS: {safeViolations}\n" +
+            $"TIME: {time}s · REPORT ACCURACY: 100%\n\n{reason}\n\n" +
+            "<color=#8ED8FF>PRESS A TO CONTINUE</color></size>";
+        text.alignment = TextAlignmentOptions.Center;
+        text.fontSize = 58f;
+        text.fontStyle = FontStyles.Bold;
+        text.color = Color.white;
+    }
+
     void Line(string name, float[] pts, Color c, float w, float up, bool clickable = false) {
         if (pts == null || pts.Length < 4) return;
         var go = new GameObject(name); go.transform.SetParent(transform, false);
@@ -146,7 +232,7 @@ public class AiesMapTable : MonoBehaviour {
         var canvasObject = new GameObject("FaultEvidencePhoto", typeof(RectTransform), typeof(Canvas));
         canvasObject.transform.SetParent(transform, false);
         canvasObject.transform.localPosition = panel.transform.localPosition + new Vector3(0f, 0.06f, 0f);
-        canvasObject.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+        canvasObject.transform.localRotation = Quaternion.Euler(78f, 0f, 0f);
         canvasObject.transform.localScale = Vector3.one * 0.001f;
         canvasObject.GetComponent<Canvas>().renderMode = RenderMode.WorldSpace;
         var rect = canvasObject.GetComponent<RectTransform>();
@@ -216,16 +302,4 @@ public class AiesMapTable : MonoBehaviour {
         ringLabel.text = text; ringLabel.color = c; ringLabel.transform.localPosition = center + new Vector3(0, 0.03f, 0.13f);
     }
 
-    void Update() {
-        if (faultLine != null) {
-            float brightness = 0.72f + 0.28f * (0.5f + 0.5f * Mathf.Sin(Time.time * 6f));
-            faultLine.startColor = faultLine.endColor = new Color(1f, brightness * 0.08f, brightness * 0.08f, 1f);
-            faultLine.widthMultiplier = 0.010f + brightness * 0.005f;
-        }
-        if (ring == null || !ring.enabled) return;
-        float s = pulsing ? 1f + 0.35f * Mathf.Sin(Time.time * 5f) : 1f;
-        ring.transform.localScale = Vector3.one;
-        ring.widthMultiplier = 0.008f * s;
-        var c = ringColor; c.a = pulsing ? 0.6f + 0.4f * Mathf.Sin(Time.time * 5f) : 1f; ring.startColor = ring.endColor = c;
-    }
 }

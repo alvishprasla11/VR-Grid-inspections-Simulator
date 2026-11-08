@@ -35,6 +35,7 @@ public class AiesMapTable : MonoBehaviour {
     static readonly Dictionary<int, float> KvWidth = new Dictionary<int, float> { { 69, 0.003f }, { 138, 0.004f }, { 240, 0.006f }, { 500, 0.009f } };
     static readonly Color NormalLineColor = new Color(0.12f, 0.95f, 0.3f, 0.95f);
     static readonly Color FaultLineColor = new Color(1f, 0.02f, 0.02f, 1f);
+    static readonly Color DispatchedLineColor = new Color(1f, 0.48f, 0.04f, 1f);
 
     AiesMap map; float depth; Material lineMat;
     readonly Dictionary<string, Transform> stations = new Dictionary<string, Transform>();
@@ -58,8 +59,9 @@ public class AiesMapTable : MonoBehaviour {
         for (int i = 0; i < map.lines.Length; i++) {
             var l = map.lines[i];
             bool isFault = i == faultLineIndex;
+            bool dispatched = isFault && HasCapturedPhoto();
             Line(isFault ? "FAULT · PRESS TRIGGER TO LAUNCH DRONE" : l.kv + "kV", l.pts,
-                isFault ? FaultLineColor : NormalLineColor,
+                isFault ? dispatched ? DispatchedLineColor : FaultLineColor : NormalLineColor,
                 isFault ? 0.012f : KvWidth.ContainsKey(l.kv) ? KvWidth[l.kv] : 0.004f, 0,
                 isFault);
         }
@@ -81,7 +83,7 @@ public class AiesMapTable : MonoBehaviour {
             foreach (var p in map.places) Label(p.name.ToUpper(), P(p.x, p.y, 0.02f), 0.35f, new Color(1f, 0.85f, 0.4f, 0.8f));
         Label("Source: AESO Alberta Interconnected Electric System Map 2026 (Calgary Area Detail)",
               new Vector3(0, lift, -depth / 2 - 0.05f), 0.14f, new Color(0.7f, 0.85f, 1f, 0.8f));
-        if (string.IsNullOrEmpty(PlayerPrefs.GetString("GridSightFaultPhotoPath", "")))
+        if (!HasCapturedPhoto())
             AddOutageInstruction();
         else
             AddEvidencePanel();
@@ -94,6 +96,11 @@ public class AiesMapTable : MonoBehaviour {
     }
 
     Vector3 P(float x, float y, float up) => new Vector3((x - 0.5f) * width, lift + up, (0.5f - y) * depth);
+
+    static bool HasCapturedPhoto() {
+        string path = PlayerPrefs.GetString("GridSightFaultPhotoPath", "");
+        return !string.IsNullOrEmpty(path) && File.Exists(path);
+    }
 
     void Line(string name, float[] pts, Color c, float w, float up, bool clickable = false) {
         if (pts == null || pts.Length < 4) return;
@@ -133,7 +140,7 @@ public class AiesMapTable : MonoBehaviour {
         var panel = GameObject.CreatePrimitive(PrimitiveType.Cube);
         panel.name = "FaultEvidencePhotoPanel";
         panel.transform.SetParent(transform, false);
-        panel.transform.localPosition = new Vector3(0.98f, lift + 0.18f, -depth / 2 - 0.25f);
+        panel.transform.localPosition = new Vector3(-0.98f, lift + 0.18f, -depth / 2 - 0.25f);
         panel.transform.localScale = new Vector3(0.85f, 0.06f, 0.62f);
         panel.GetComponent<Renderer>().material = ColoredMaterial(new Color(0.04f, 0.08f, 0.12f, 1f));
         var canvasObject = new GameObject("FaultEvidencePhoto", typeof(RectTransform), typeof(Canvas));
@@ -149,19 +156,36 @@ public class AiesMapTable : MonoBehaviour {
         var imageRect = imageObject.GetComponent<RectTransform>();
         imageRect.anchorMin = Vector2.zero; imageRect.anchorMax = Vector2.one;
         imageRect.offsetMin = Vector2.zero; imageRect.offsetMax = Vector2.zero;
-        var texture = new Texture2D(2, 2);
-        texture.LoadImage(File.ReadAllBytes(path));
+        byte[] bytes;
+        try {
+            bytes = File.ReadAllBytes(path);
+        }
+        catch (System.IO.IOException exception) {
+            Debug.LogError($"GridSight could not read the captured fault photo at {path}: {exception.Message}", this);
+            Destroy(panel);
+            Destroy(canvasObject);
+            return;
+        }
+        var texture = new Texture2D(2, 2, TextureFormat.RGB24, false);
+        if (!texture.LoadImage(bytes, false)) {
+            Destroy(texture);
+            Debug.LogError($"GridSight could not decode the captured fault photo at {path}.", this);
+            Destroy(panel);
+            Destroy(canvasObject);
+            return;
+        }
         imageObject.GetComponent<RawImage>().texture = texture;
-        Label("DISPATCHED REPAIRMEN", panel.transform.localPosition + new Vector3(0f, 0.08f, 0.37f), 0.2f, Color.white);
+        var status = Label("DISPATCHED", panel.transform.localPosition + new Vector3(0f, 0.08f, 0.37f), 0.2f, DispatchedLineColor);
+        status.fontStyle = FontStyles.Bold;
     }
 
     Material ColoredMaterial(Color color) {
         var material = new Material(lineMat) { color = color };
         if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
         if (material.HasProperty("_Color")) material.SetColor("_Color", color);
-        if (color == FaultLineColor && material.HasProperty("_EmissionColor")) {
+        if ((color == FaultLineColor || color == DispatchedLineColor) && material.HasProperty("_EmissionColor")) {
             material.EnableKeyword("_EMISSION");
-            material.SetColor("_EmissionColor", color * 3f);
+            material.SetColor("_EmissionColor", color * 2.5f);
         }
         return material;
     }

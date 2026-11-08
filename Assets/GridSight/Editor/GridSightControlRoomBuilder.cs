@@ -96,7 +96,7 @@ public static class GridSightControlRoomBuilder {
         Btn(con, "Back to live data", new Vector2(0, -310), new Color(0.25f, 0.3f, 0.38f), replay.StopReplay);
 
         // ---------- impact screen (right wall) ----------
-        var imp = WorldCanvas("ImpactScreen", new Vector3(4.4f, 1.9f, 1.5f), Quaternion.Euler(0, 90, 0), new Vector2(2600, 1300), cam);
+        var imp = WorldCanvas("ImpactScreen", new Vector3(4.4f, 1.45f, -0.6f), Quaternion.Euler(0, 90, 0), new Vector2(2600, 1300), cam);
         Img(imp, "Bg", Vector2.zero, new Vector2(2600, 1300), Panel);
         Txt(imp, "Header", "COMMUNITY IMPACT · REAL RELIABILITY DATA", new Vector2(0, 540), new Vector2(2500, 110), 70, Cyan, FontStyles.Bold);
         var impact = imp.gameObject.AddComponent<ImpactScreen>();

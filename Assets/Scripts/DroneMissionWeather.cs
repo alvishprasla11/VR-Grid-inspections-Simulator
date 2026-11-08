@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -12,6 +13,7 @@ public sealed class DroneMissionWeather : MonoBehaviour
     InputAction captureAction;
     ParticleSystem snow;
     bool captureStarted;
+    float captureReadyAt;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Install()
@@ -43,14 +45,16 @@ public sealed class DroneMissionWeather : MonoBehaviour
         captureAction.AddBinding("<OculusTouchController>{LeftHand}/gripPressed");
         captureAction.AddBinding("<OculusTouchController>{RightHand}/gripPressed");
         captureAction.Enable();
+        captureReadyAt = Time.unscaledTime + 1f;
         CreateSnow();
         CreateSnowGround();
         DarkenStorm();
+        RandomizeElectricityVfx();
     }
 
     void Update()
     {
-        if (!captureStarted && captureAction.WasPressedThisFrame())
+        if (!captureStarted && Time.unscaledTime >= captureReadyAt && captureAction.WasPressedThisFrame())
             StartCoroutine(CaptureAndReturn());
     }
 
@@ -65,14 +69,14 @@ public sealed class DroneMissionWeather : MonoBehaviour
         snow = snowObject.AddComponent<ParticleSystem>();
         var main = snow.main;
         main.loop = true;
-        main.startLifetime = 3.5f;
-        main.startSpeed = 0.6f;
-        main.startSize = new ParticleSystem.MinMaxCurve(0.015f, 0.04f);
-        main.startColor = new Color(0.9f, 0.95f, 1f, 0.85f);
-        main.maxParticles = 700;
+        main.startLifetime = 4.5f;
+        main.startSpeed = 0.45f;
+        main.startSize = new ParticleSystem.MinMaxCurve(0.006f, 0.018f);
+        main.startColor = new Color(0.82f, 0.9f, 1f, 0.38f);
+        main.maxParticles = 450;
         main.simulationSpace = ParticleSystemSimulationSpace.Local;
         var emission = snow.emission;
-        emission.rateOverTime = 420f;
+        emission.rateOverTime = 220f;
         var shape = snow.shape;
         shape.shapeType = ParticleSystemShapeType.Box;
         shape.scale = new Vector3(2.4f, 1.8f, 1.2f);
@@ -86,7 +90,7 @@ public sealed class DroneMissionWeather : MonoBehaviour
         renderer.renderMode = ParticleSystemRenderMode.Billboard;
         renderer.material = new Material(Shader.Find("Sprites/Default"));
         renderer.material.mainTexture = CreateRoundSnowTexture();
-        renderer.material.color = Color.white;
+        renderer.material.color = new Color(0.88f, 0.94f, 1f, 0.7f);
     }
 
     void DarkenStorm()
@@ -107,6 +111,61 @@ public sealed class DroneMissionWeather : MonoBehaviour
             light.intensity *= 0.55f;
     }
 
+    void RandomizeElectricityVfx()
+    {
+        var candidates = new List<GameObject>();
+        var particleSystems = FindObjectsByType<ParticleSystem>(
+            FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+        foreach (var particleSystem in particleSystems)
+        {
+            Transform candidate = particleSystem.transform;
+            Transform electricityParent = FindElectricityParent(candidate);
+            if (electricityParent != null && electricityParent != candidate)
+            {
+                while (candidate.parent != null && candidate.parent != electricityParent)
+                    candidate = candidate.parent;
+            }
+            else if (!HasElectricityName(candidate.name))
+            {
+                continue;
+            }
+
+            if (!candidates.Contains(candidate.gameObject))
+                candidates.Add(candidate.gameObject);
+        }
+
+        if (candidates.Count == 0)
+        {
+            Debug.LogWarning("GridSight found no electricity VFX. Name the four effects with 'Electricity' or place them under an 'Electricity' parent.", this);
+            return;
+        }
+
+        foreach (var candidate in candidates)
+            candidate.SetActive(false);
+
+        int selectedIndex = Random.Range(0, candidates.Count);
+        candidates[selectedIndex].SetActive(true);
+        Debug.Log($"GridSight selected electricity outage VFX {selectedIndex + 1} of {candidates.Count}.", this);
+    }
+
+    static Transform FindElectricityParent(Transform current)
+    {
+        while (current != null)
+        {
+            if (HasElectricityName(current.name))
+                return current;
+            current = current.parent;
+        }
+        return null;
+    }
+
+    static bool HasElectricityName(string objectName)
+    {
+        return objectName.IndexOf("electricity", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+               objectName.IndexOf("electric", System.StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
     static Texture2D CreateRoundSnowTexture()
     {
         const int size = 32;
@@ -118,7 +177,7 @@ public sealed class DroneMissionWeather : MonoBehaviour
             for (int x = 0; x < size; x++)
             {
                 float distance = Vector2.Distance(new Vector2(x, y), new Vector2(15.5f, 15.5f));
-                float alpha = Mathf.Clamp01((16f - distance) * 2.5f);
+                float alpha = Mathf.Clamp01((16f - distance) * 1.4f) * 0.62f;
                 texture.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
             }
         }
@@ -169,23 +228,101 @@ public sealed class DroneMissionWeather : MonoBehaviour
     {
         captureStarted = true;
         string path = Path.Combine(Application.persistentDataPath, "gridsight_fault_photo.png");
+        yield return new WaitForEndOfFrame();
+        var camera = Camera.main;
+        if (camera == null)
+        {
+            Debug.LogError("GridSight could not capture the fault photo because no main camera is available.", this);
+            captureStarted = false;
+            yield break;
+        }
+
+        var texture = CaptureCameraFrame(camera);
+        if (texture == null)
+        {
+            Debug.LogError("GridSight could not capture the fault photo from the drone camera.", this);
+            captureStarted = false;
+            yield break;
+        }
+
+        byte[] imageBytes = texture.EncodeToPNG();
+        Destroy(texture);
+        if (imageBytes == null || imageBytes.Length == 0)
+        {
+            Debug.LogError("GridSight produced an empty fault photo.", this);
+            captureStarted = false;
+            yield break;
+        }
+
+        try
+        {
+            File.WriteAllBytes(path, imageBytes);
+        }
+        catch (System.IO.IOException exception)
+        {
+            Debug.LogError($"GridSight could not save the fault photo to {path}: {exception.Message}", this);
+            captureStarted = false;
+            yield break;
+        }
+        catch (System.UnauthorizedAccessException exception)
+        {
+            Debug.LogError($"GridSight has no permission to save the fault photo to {path}: {exception.Message}", this);
+            captureStarted = false;
+            yield break;
+        }
         PlayerPrefs.SetString(PhotoPathKey, path);
         PlayerPrefs.SetString("GridSightRepairStatus", "DISPATCHED REPAIRMEN");
         PlayerPrefs.Save();
-        yield return new WaitForEndOfFrame();
-        ScreenCapture.CaptureScreenshot(path);
-        float timeout = Time.realtimeSinceStartup + 8f;
-        while (!File.Exists(path) && Time.realtimeSinceStartup < timeout)
-            yield return null;
-        if (!File.Exists(path))
-            Debug.LogError($"GridSight could not save the fault photo to {path}.", this);
+        if (!Application.CanStreamedLevelBeLoaded(ReturnScene))
+        {
+            Debug.LogError($"GridSight could not return to control room scene '{ReturnScene}'. Add it to Build Settings.", this);
+            captureStarted = false;
+            yield break;
+        }
+        captureAction.Disable();
         SceneManager.LoadScene(ReturnScene);
         Destroy(gameObject);
+    }
+
+    static Texture2D CaptureCameraFrame(Camera camera)
+    {
+        const int width = 1024;
+        const int height = 1024;
+        var renderTexture = RenderTexture.GetTemporary(width, height, 24, RenderTextureFormat.ARGB32);
+        var previousTarget = camera.targetTexture;
+        var previousActive = RenderTexture.active;
+        try
+        {
+            camera.targetTexture = renderTexture;
+            camera.Render();
+            RenderTexture.active = renderTexture;
+            var texture = new Texture2D(width, height, TextureFormat.RGB24, false);
+            texture.ReadPixels(new Rect(0, 0, width, height), 0, 0, false);
+            texture.Apply(false, false);
+            return texture;
+        }
+        finally
+        {
+            camera.targetTexture = previousTarget;
+            RenderTexture.active = previousActive;
+            RenderTexture.ReleaseTemporary(renderTexture);
+        }
     }
 
     void OnDestroy()
     {
         captureAction?.Disable();
         captureAction?.Dispose();
+    }
+
+    void OnApplicationQuit()
+    {
+        string path = PlayerPrefs.GetString(PhotoPathKey, "");
+        if (!string.IsNullOrEmpty(path) && File.Exists(path))
+            File.Delete(path);
+
+        PlayerPrefs.DeleteKey(PhotoPathKey);
+        PlayerPrefs.DeleteKey("GridSightRepairStatus");
+        PlayerPrefs.Save();
     }
 }

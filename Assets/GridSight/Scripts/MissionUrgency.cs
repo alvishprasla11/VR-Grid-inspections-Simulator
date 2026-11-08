@@ -41,7 +41,7 @@ public class MissionUrgency : MonoBehaviour {
             dispatchText.text = DispatchMessage;
             var header = dispatchText.transform.parent.Find("Header")?.GetComponent<TMP_Text>();
             if (header != null) {
-                header.text = dispatched ? "DISPATCHED" : "DISPATCH";
+                header.text = "DISPATCH";
                 header.color = dispatched ? DispatchedColor : new Color(1f, 0.45f, 0.45f);
             }
             var background = dispatchText.transform.parent.Find("Bg")?.GetComponent<Image>();

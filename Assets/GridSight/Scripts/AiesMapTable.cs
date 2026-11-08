@@ -255,6 +255,9 @@ public class AiesMapTable : MonoBehaviour {
         imageObject.GetComponent<RawImage>().texture = texture;
         var status = Label("DISPATCHED", canvasObject.transform.localPosition + new Vector3(0f, 0.08f, 0.37f), 0.2f, DispatchedLineColor);
         status.fontStyle = FontStyles.Bold;
+        status.textWrappingMode = TextWrappingModes.NoWrap;
+        status.overflowMode = TextOverflowModes.Overflow;
+        status.rectTransform.sizeDelta = new Vector2(4f, 0.3f);
     }
 
     Material ColoredMaterial(Color color) {

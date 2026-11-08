@@ -1,5 +1,6 @@
 # RVQ11B - Slaves of AI - GridSight VR
 
+# Team Members : Alaik Kadiwar: Alvish Prasla : Shahbaz Khawaja 
 ## GridSight VR Grid Drone Training Simulator
 
 GridSight is a Unity virtual-reality training simulator for electric-grid drone
@@ -30,7 +31,7 @@ Universal Render Pipeline packages.
 6. Open `Assets/Scenes/GridSight_ControlRoom.unity`.
 
 If the control-room layout needs to be rebuilt, use:
-
+   
 **GridSight > Build Control Room Scene**
 
 ## Run in the Unity Editor
